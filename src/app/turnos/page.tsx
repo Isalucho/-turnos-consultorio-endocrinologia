@@ -1,14 +1,12 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { getAvailableSlots } from "@/lib/availability";
 import { formatDateISO, formatDateLong, parseDateOnly, todayDateOnly } from "@/lib/dates";
 import { prisma } from "@/lib/prisma";
 import { requirePaciente } from "@/lib/session";
 
 import { BookForm } from "./book-form";
+import { DateFilterForm } from "./date-filter-form";
 
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -61,16 +59,7 @@ export default async function TurnosPage(props: PageProps<"/turnos">) {
           <CardTitle className="text-base">Elegí una fecha</CardTitle>
         </CardHeader>
         <CardContent>
-          <form method="get" className="flex flex-wrap items-end gap-3">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="date">Fecha</Label>
-              <Input type="date" id="date" name="date" defaultValue={selectedDateISO} min={todayISO} />
-            </div>
-            {rescheduleId && <input type="hidden" name="reschedule" value={rescheduleId} />}
-            <Button type="submit" variant="outline">
-              Ver horarios
-            </Button>
-          </form>
+          <DateFilterForm selectedDateISO={selectedDateISO} todayISO={todayISO} rescheduleId={rescheduleId} />
         </CardContent>
       </Card>
 

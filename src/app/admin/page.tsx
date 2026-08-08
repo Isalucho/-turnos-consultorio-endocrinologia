@@ -1,16 +1,13 @@
-import Link from "next/link";
-
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDateLong, parseDateOnly, todayDateOnly } from "@/lib/dates";
 import { prisma } from "@/lib/prisma";
 import type { AppointmentStatus, Prisma } from "@prisma/client";
 
 import { adminCancelAppointmentAction, markAppointmentCompletedAction } from "./actions";
+import { AppointmentFiltersForm } from "./appointment-filters-form";
 
 const STATUS_LABEL: Record<AppointmentStatus, string> = {
   CONFIRMED: "Confirmado",
@@ -59,34 +56,7 @@ export default async function AdminAppointmentsPage(props: PageProps<"/admin">) 
           <CardTitle className="text-base">Filtros</CardTitle>
         </CardHeader>
         <CardContent>
-          <form method="get" className="flex flex-wrap items-end gap-3">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="date">Fecha</Label>
-              <Input type="date" id="date" name="date" defaultValue={dateParam} />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="status">Estado</Label>
-              <select
-                id="status"
-                name="status"
-                defaultValue={statusParam}
-                className="h-8 w-40 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-              >
-                <option value="CONFIRMED">Confirmados</option>
-                <option value="CANCELLED">Cancelados</option>
-                <option value="COMPLETED">Realizados</option>
-                <option value="ALL">Todos</option>
-              </select>
-            </div>
-            <Button type="submit" variant="outline">
-              Filtrar
-            </Button>
-            {dateParam && (
-              <Link href="/admin" className={buttonVariants({ variant: "ghost" })}>
-                Limpiar fecha
-              </Link>
-            )}
-          </form>
+          <AppointmentFiltersForm dateParam={dateParam} statusParam={statusParam} />
         </CardContent>
       </Card>
 
