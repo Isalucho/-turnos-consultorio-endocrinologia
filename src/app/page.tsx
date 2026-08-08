@@ -1,69 +1,66 @@
-import Image from "next/image";
+import Link from "next/link";
 
-export default function Home() {
+import { auth } from "@/auth";
+import { buttonVariants } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+export default async function Home() {
+  const session = await auth();
+  const ctaHref = session?.user
+    ? session.user.role === "ADMIN"
+      ? "/admin"
+      : "/turnos"
+    : "/registro";
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="flex flex-1 flex-col items-center justify-center bg-zinc-50 px-6 py-16">
+      <div className="w-full max-w-2xl text-center">
+        <p className="mb-2 text-sm font-medium text-emerald-700">Consultorio de Endocrinología</p>
+        <h1 className="mb-4 text-4xl font-semibold tracking-tight text-zinc-900">
+          Sacá tu turno online, sin llamadas ni esperas
+        </h1>
+        <p className="mb-8 text-lg text-zinc-600">
+          Registrate, elegí el día y horario que más te convenga, y gestioná tus turnos desde
+          cualquier lugar.
+        </p>
+        <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Link href={ctaHref} className={buttonVariants({ size: "lg" })}>
+            {session?.user ? "Ir a mis turnos" : "Registrarme"}
+          </Link>
+          {!session?.user && (
+            <Link href="/login" className={buttonVariants({ variant: "outline", size: "lg" })}>
+              Ya tengo cuenta
+            </Link>
+          )}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </div>
+
+      <div className="mt-16 grid w-full max-w-2xl gap-4 sm:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">1. Registrate</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CardDescription>Creá tu cuenta con tus datos y los de tu obra social.</CardDescription>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">2. Elegí un horario</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CardDescription>Mirá los horarios disponibles y reservá el que prefieras.</CardDescription>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">3. Listo</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CardDescription>Recibís un email de confirmación y podés gestionarlo cuando quieras.</CardDescription>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -1,36 +1,118 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Turnos — Consultorio de Endocrinología
 
-## Getting Started
+Aplicación web para que pacientes se registren y saquen turnos online, y para que la
+administradora del consultorio gestione horarios de atención, bloqueos y turnos desde un panel.
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Next.js 16** (App Router) + TypeScript + Tailwind CSS + shadcn/ui
+- **PostgreSQL** vía **Prisma 7** (driver adapter `@prisma/adapter-pg`)
+- **Auth.js (next-auth v5)** con Credentials provider (email + contraseña), sesiones JWT y roles
+  `PACIENTE` / `ADMIN`
+- **Resend** + React Email para los emails de confirmación/cancelación/reprogramación de turnos
+
+## Requisitos previos
+
+- Node.js 20+
+- Una base de datos PostgreSQL. Recomendado: [Neon](https://neon.tech) (tiene plan gratuito y se
+  integra directo con Vercel).
+
+## Configuración local
+
+1. Instalar dependencias:
+
+   ```bash
+   npm install
+   ```
+
+2. Copiar `.env.example` a `.env` y completar las variables:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   - `DATABASE_URL`: cadena de conexión a tu base Postgres (Neon, local, etc.)
+   - `AUTH_SECRET`: generar con `openssl rand -base64 32` (o `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`)
+   - `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `ADMIN_NAME`: credenciales del usuario administrador que
+     va a crear el script de seed
+   - `RESEND_API_KEY` / `EMAIL_FROM`: opcional en desarrollo. Si se deja vacío, los emails se
+     loguean en la consola del servidor en vez de enviarse.
+
+3. Crear las tablas en la base de datos:
+
+   ```bash
+   npm run db:migrate
+   ```
+
+4. Crear el usuario administrador (usa `ADMIN_EMAIL` / `ADMIN_PASSWORD` del `.env`):
+
+   ```bash
+   npm run db:seed
+   ```
+
+5. Levantar el servidor de desarrollo:
+
+   ```bash
+   npm run dev
+   ```
+
+   Abrir [http://localhost:3000](http://localhost:3000). Registrate como paciente desde
+   `/registro`, o iniciá sesión como administradora en `/login` con las credenciales del seed.
+
+   > Antes de sacar turnos vas a necesitar cargar al menos una franja horaria desde
+   > `/admin/horarios` (como admin), si no `/turnos` va a mostrar "no hay horarios disponibles".
+
+## Scripts
+
+| Comando | Descripción |
+| --- | --- |
+| `npm run dev` | Servidor de desarrollo |
+| `npm run build` | Build de producción |
+| `npm run start` | Corre el build de producción |
+| `npm run lint` | ESLint |
+| `npm run db:migrate` | Aplica migraciones de Prisma (`prisma migrate dev`) |
+| `npm run db:seed` | Crea/actualiza el usuario admin |
+| `npm run db:studio` | Abre Prisma Studio para inspeccionar la base |
+
+## Estructura relevante
+
+```
+prisma/schema.prisma       Modelo de datos (User, WorkingHours, BlockedDate, Appointment)
+prisma/seed.ts              Script que crea el usuario admin
+prisma.config.ts            Configuración de Prisma 7 (CLI / migraciones)
+src/auth.ts                 Configuración de Auth.js (Credentials, JWT, roles)
+src/proxy.ts                 Protección de rutas por rol (reemplaza a middleware.ts en Next 16)
+src/lib/availability.ts      Cálculo de horarios disponibles
+src/lib/email.ts             Envío de emails transaccionales (Resend)
+src/app/registro, /login     Alta de cuenta e inicio de sesión
+src/app/turnos               Sacar turno, mis turnos (cancelar/reprogramar) — rol PACIENTE
+src/app/admin                Turnos, horarios, bloqueos, pacientes — rol ADMIN
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Despliegue en producción (Vercel + Supabase/Neon + Resend)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Base de datos**: crear un proyecto en [Supabase](https://supabase.com) o
+   [Neon](https://neon.tech) y copiar el `DATABASE_URL`.
+   > **Importante (Supabase + Vercel):** usar el connection string del **"Transaction pooler"**
+   > (puerto `6543`), no el "Session pooler" (`5432`). Vercel corre en funciones serverless de
+   > vida corta, y el Session pooler puede colgar las conexiones desde ese entorno. El Transaction
+   > pooler está pensado justo para este caso.
+2. **Email**: crear cuenta en [Resend](https://resend.com), generar una `RESEND_API_KEY`. Para
+   producción hay que verificar un dominio propio en Resend; mientras tanto se puede usar el
+   remitente de pruebas `onboarding@resend.dev`.
+3. **Hosting**: importar el repositorio en [Vercel](https://vercel.com/new) (o usar `vercel` CLI)
+   y configurar las variables de entorno (`DATABASE_URL`, `AUTH_SECRET`, `RESEND_API_KEY`,
+   `EMAIL_FROM`).
+4. Correr las migraciones contra la base de producción (`DATABASE_URL` apuntando a Supabase/Neon):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+   ```bash
+   npm run db:migrate
+   ```
 
-## Learn More
+5. Crear el usuario admin en producción:
 
-To learn more about Next.js, take a look at the following resources:
+   ```bash
+   DATABASE_URL="..." ADMIN_EMAIL="..." ADMIN_PASSWORD="..." npm run db:seed
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+6. Hacer deploy en Vercel (se dispara automáticamente en cada push, o `vercel deploy` manual).

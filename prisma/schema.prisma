@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  PACIENTE
+  ADMIN
+}
+
+enum AppointmentStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  phone        String
+  dni          String
+  obraSocial   String?
+  role         Role     @default(PACIENTE)
+  createdAt    DateTime @default(now())
+
+  appointments Appointment[]
+}
+
+// Plantilla semanal de atención (0 = domingo ... 6 = sábado)
+model WorkingHours {
+  id                  String @id @default(cuid())
+  dayOfWeek           Int
+  startTime           String // "09:00"
+  endTime             String // "13:00"
+  slotDurationMinutes Int    @default(30)
+
+  @@index([dayOfWeek])
+}
+
+// Bloqueos puntuales: vacaciones, feriados, ausencias
+model BlockedDate {
+  id        String   @id @default(cuid())
+  date      DateTime @db.Date
+  startTime String? // null = bloquea el día completo
+  endTime   String?
+  reason    String?
+
+  @@index([date])
+}
+
+model Appointment {
+  id        String            @id @default(cuid())
+  patientId String
+  patient   User              @relation(fields: [patientId], references: [id])
+  date      DateTime          @db.Date
+  startTime String
+  endTime   String
+  status    AppointmentStatus @default(CONFIRMED)
+  reason    String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  // Nota: la unicidad real de horario (evitar doble-booking) se aplica con un
+  // índice único parcial (WHERE status = 'CONFIRMED') agregado a mano en la
+  // migración inicial, ya que Prisma no soporta índices parciales en el schema.
+  @@index([patientId])
+  @@index([date, startTime])
+}

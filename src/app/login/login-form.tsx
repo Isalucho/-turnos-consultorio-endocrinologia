@@ -1,0 +1,42 @@
+"use client";
+
+import Link from "next/link";
+import { useActionState } from "react";
+
+import { loginAction, type LoginState } from "./actions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+const initialState: LoginState = undefined;
+
+export function LoginForm() {
+  const [state, formAction, pending] = useActionState(loginAction, initialState);
+
+  return (
+    <form action={formAction} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="email">Email</Label>
+        <Input id="email" name="email" type="email" placeholder="maria@email.com" required />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="password">Contraseña</Label>
+        <Input id="password" name="password" type="password" required />
+      </div>
+
+      {state?.message && <p className="text-sm text-red-600">{state.message}</p>}
+
+      <Button type="submit" disabled={pending} className="mt-2">
+        {pending ? "Ingresando..." : "Ingresar"}
+      </Button>
+
+      <p className="text-center text-sm text-zinc-600">
+        ¿No tenés cuenta?{" "}
+        <Link href="/registro" className="font-medium text-emerald-700 hover:underline">
+          Registrate
+        </Link>
+      </p>
+    </form>
+  );
+}
