@@ -36,6 +36,16 @@ export const WorkingHoursSchema = z
     path: ["endTime"],
   });
 
+export const ClinicalNoteSchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida."),
+  weightKg: z.coerce.number().positive().max(500).optional().or(z.literal("").transform(() => undefined)),
+  bloodPressure: z.string().trim().max(20).optional(),
+  diagnosis: z.string().trim().max(500).optional(),
+  treatment: z.string().trim().max(1000).optional(),
+  labResults: z.string().trim().max(1000).optional(),
+  notes: z.string().trim().max(1000).optional(),
+});
+
 export const BlockedDateSchema = z
   .object({
     date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida."),

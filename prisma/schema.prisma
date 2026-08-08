@@ -28,7 +28,8 @@ model User {
   role         Role     @default(PACIENTE)
   createdAt    DateTime @default(now())
 
-  appointments Appointment[]
+  appointments  Appointment[]
+  clinicalNotes ClinicalNote[]
 }
 
 // Plantilla semanal de atención (0 = domingo ... 6 = sábado)
@@ -70,4 +71,21 @@ model Appointment {
   // migración inicial, ya que Prisma no soporta índices parciales en el schema.
   @@index([patientId])
   @@index([date, startTime])
+}
+
+// Historia clínica: notas cronológicas por paciente, solo visibles para ADMIN.
+model ClinicalNote {
+  id            String   @id @default(cuid())
+  patientId     String
+  patient       User     @relation(fields: [patientId], references: [id])
+  date          DateTime @db.Date
+  weightKg      Float?
+  bloodPressure String?
+  diagnosis     String?
+  treatment     String?
+  labResults    String?
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  @@index([patientId])
 }

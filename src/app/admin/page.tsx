@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -80,9 +82,9 @@ export default async function AdminAppointmentsPage(props: PageProps<"/admin">) 
               Filtrar
             </Button>
             {dateParam && (
-              <a href="/admin" className={buttonVariants({ variant: "ghost" })}>
+              <Link href="/admin" className={buttonVariants({ variant: "ghost" })}>
                 Limpiar fecha
-              </a>
+              </Link>
             )}
           </form>
         </CardContent>
