@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { signIn } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getClientIp, isLimited, loginRules } from "@/lib/rate-limit";
 import { LoginSchema } from "@/lib/validations";
 
 export type LoginState = { message?: string } | undefined;
@@ -20,6 +21,13 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
   }
 
   const { email, password } = validated.data;
+
+  // Solo para mostrar un mensaje claro; el bloqueo real se aplica dentro de `authorize` (src/auth.ts).
+  if (await isLimited(loginRules(email, await getClientIp()))) {
+    return {
+      message: "Demasiados intentos fallidos. Esperá unos 15 minutos o usá \"¿Olvidaste tu contraseña?\".",
+    };
+  }
 
   try {
     await signIn("credentials", { email, password, redirect: false });

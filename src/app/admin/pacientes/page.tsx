@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -30,9 +30,14 @@ export default async function PacientesPage(props: PageProps<"/admin/pacientes">
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-zinc-900">Pacientes</h1>
-        <p className="text-zinc-600">{patients.length} pacientes {q ? "encontrados" : "registrados"}.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-zinc-900">Pacientes</h1>
+          <p className="text-zinc-600">{patients.length} pacientes {q ? "encontrados" : "registrados"}.</p>
+        </div>
+        <Link href="/admin/pacientes/nuevo" className={buttonVariants()}>
+          Nuevo paciente
+        </Link>
       </div>
 
       <Card>
@@ -81,7 +86,7 @@ export default async function PacientesPage(props: PageProps<"/admin/pacientes">
                       </Link>
                     </TableCell>
                     <TableCell className="text-sm text-zinc-600">
-                      <div>{patient.email}</div>
+                      {patient.email && <div>{patient.email}</div>}
                       <div>{patient.phone}</div>
                     </TableCell>
                     <TableCell>{patient.dni}</TableCell>

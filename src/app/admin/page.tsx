@@ -2,24 +2,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { APPOINTMENT_STATUS_BADGE_VARIANT, APPOINTMENT_STATUS_LABEL } from "@/lib/appointment-status";
 import { formatDateLong, parseDateOnly, todayDateOnly } from "@/lib/dates";
 import { prisma } from "@/lib/prisma";
 import type { AppointmentStatus, Prisma } from "@prisma/client";
 
 import { adminCancelAppointmentAction, markAppointmentCompletedAction } from "./actions";
 import { AppointmentFiltersForm } from "./appointment-filters-form";
-
-const STATUS_LABEL: Record<AppointmentStatus, string> = {
-  CONFIRMED: "Confirmado",
-  CANCELLED: "Cancelado",
-  COMPLETED: "Realizado",
-};
-
-const STATUS_BADGE_VARIANT: Record<AppointmentStatus, "default" | "secondary" | "destructive"> = {
-  CONFIRMED: "default",
-  CANCELLED: "destructive",
-  COMPLETED: "secondary",
-};
 
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -92,15 +81,15 @@ export default async function AdminAppointmentsPage(props: PageProps<"/admin">) 
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-zinc-600">
-                      <div>{appointment.patient.email}</div>
+                      {appointment.patient.email && <div>{appointment.patient.email}</div>}
                       <div>{appointment.patient.phone}</div>
                     </TableCell>
                     <TableCell className="max-w-40 truncate text-sm text-zinc-600">
                       {appointment.reason ?? "-"}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={STATUS_BADGE_VARIANT[appointment.status]}>
-                        {STATUS_LABEL[appointment.status]}
+                      <Badge variant={APPOINTMENT_STATUS_BADGE_VARIANT[appointment.status]}>
+                        {APPOINTMENT_STATUS_LABEL[appointment.status]}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">

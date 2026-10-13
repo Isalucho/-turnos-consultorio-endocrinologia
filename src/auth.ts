@@ -4,6 +4,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
 import { prisma } from "@/lib/prisma";
+import { clearHits, getRequestIp, isLimited, loginKeys, loginRules, recordHit } from "@/lib/rate-limit";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
@@ -14,16 +15,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Contraseña", type: "password" },
       },
-      authorize: async (credentials) => {
+      authorize: async (credentials, request) => {
         const email = credentials?.email as string | undefined;
         const password = credentials?.password as string | undefined;
         if (!email || !password) return null;
 
-        const user = await prisma.user.findUnique({ where: { email } });
-        if (!user) return null;
+        const ip = getRequestIp(request);
+        const keys = loginKeys(email, ip);
+        if (await isLimited(loginRules(email, ip))) return null;
 
-        const isValid = await bcrypt.compare(password, user.passwordHash);
-        if (!isValid) return null;
+        const user = await prisma.user.findUnique({ where: { email } });
+        const isValid = user?.passwordHash ? await bcrypt.compare(password, user.passwordHash) : false;
+        if (!user || !isValid) {
+          await recordHit([keys.byEmail, keys.byIp]);
+          return null;
+        }
+
+        await clearHits(keys.byEmail);
 
         return {
           id: user.id,

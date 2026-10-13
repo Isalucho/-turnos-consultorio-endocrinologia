@@ -1,3 +1,4 @@
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { WEEKDAYS_ES } from "@/lib/dates";
@@ -6,7 +7,10 @@ import { prisma } from "@/lib/prisma";
 import { deleteWorkingHoursAction } from "../actions";
 import { WorkingHoursForm } from "./working-hours-form";
 
-export default async function HorariosPage() {
+export default async function HorariosPage(props: PageProps<"/admin/horarios">) {
+  const searchParams = await props.searchParams;
+  const error = typeof searchParams.error === "string" ? searchParams.error : undefined;
+
   const workingHours = await prisma.workingHours.findMany({
     orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
   });
@@ -21,6 +25,13 @@ export default async function HorariosPage() {
           Definí la plantilla semanal de atención. Podés agregar más de una franja por día (ej. mañana y tarde).
         </p>
       </div>
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertTitle>No se pudo quitar la franja</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardHeader>

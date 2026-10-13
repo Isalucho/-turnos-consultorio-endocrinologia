@@ -18,18 +18,37 @@ enum AppointmentStatus {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  phone        String
-  dni          String
-  obraSocial   String?
-  role         Role     @default(PACIENTE)
-  createdAt    DateTime @default(now())
+  id                String    @id @default(cuid())
+  name              String
+  // Opcionales: los pacientes cargados a mano desde el admin pueden no tener
+  // email ni cuenta propia (se activa después con "olvidé mi contraseña").
+  email             String?   @unique
+  passwordHash      String?
+  phone             String
+  dni               String
+  obraSocial        String?
+  role              Role      @default(PACIENTE)
+  privacyAcceptedAt DateTime?
+  createdAt         DateTime  @default(now())
 
-  appointments  Appointment[]
-  clinicalNotes ClinicalNote[]
+  appointments        Appointment[]
+  clinicalNotes       ClinicalNote[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+// Tokens de un solo uso para el flujo de "olvidé mi contraseña". Se guarda el
+// hash del token (no el valor en texto plano) para que una fuga de la base no
+// permita reconstruir el link de reseteo.
+model PasswordResetToken {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
 }
 
 // Plantilla semanal de atención (0 = domingo ... 6 = sábado)
@@ -86,6 +105,32 @@ model ClinicalNote {
   labResults    String?
   notes         String?
   createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+  // Baja lógica: una nota "eliminada" se oculta pero se puede restaurar.
+  deletedAt     DateTime?
+
+  revisions ClinicalNoteRevision[]
 
   @@index([patientId])
+}
+
+// Copia de cómo estaba una nota justo antes de cada edición.
+model ClinicalNoteRevision {
+  id        String       @id @default(cuid())
+  noteId    String
+  note      ClinicalNote @relation(fields: [noteId], references: [id])
+  snapshot  Json
+  createdAt DateTime     @default(now())
+
+  @@index([noteId])
+}
+
+// Intentos recientes (login, registro, recuperar contraseña) para limitar abusos.
+// `key` guarda un hash del identificador, no el email ni la IP en claro.
+model RateLimitHit {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
 }

@@ -4,8 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 import { LoginForm } from "./login-form";
 
-export default async function LoginPage() {
+export default async function LoginPage(props: PageProps<"/login">) {
   const session = await auth();
+  const searchParams = await props.searchParams;
+  const justReset = searchParams.restablecida === "1";
 
   return (
     <div className="flex flex-1 items-center justify-center bg-zinc-50 px-4 py-12">
@@ -14,7 +16,12 @@ export default async function LoginPage() {
           <CardTitle>Iniciar sesión</CardTitle>
           <CardDescription>Ingresá con tu email y contraseña.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-4">
+          {justReset && !session?.user && (
+            <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+              Tu contraseña se actualizó. Ya podés iniciar sesión.
+            </div>
+          )}
           {session?.user ? (
             <AlreadyLoggedInNotice name={session.user.name ?? session.user.email ?? ""} role={session.user.role} />
           ) : (

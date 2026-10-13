@@ -4,6 +4,7 @@ import { Resend } from "resend";
 import AppointmentCancelledEmail from "@/emails/appointment-cancelled";
 import AppointmentConfirmedEmail from "@/emails/appointment-confirmed";
 import AppointmentRescheduledEmail from "@/emails/appointment-rescheduled";
+import PasswordResetEmail from "@/emails/password-reset";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const FROM_EMAIL = process.env.EMAIL_FROM ?? "Consultorio <onboarding@resend.dev>";
@@ -14,8 +15,13 @@ async function safeSend(params: Parameters<Resend["emails"]["send"]>[0]) {
     console.warn("[email] RESEND_API_KEY no configurada, se omite el envío:", params.subject);
     return;
   }
-  const { error } = await resend.emails.send(params);
-  if (error) console.error("[email] Error al enviar:", error);
+  try {
+    const { error } = await resend.emails.send(params);
+    if (error) console.error("[email] Error al enviar:", error);
+  } catch (error) {
+    // Un fallo de red al mandar el mail no debe deshacer ni romper una acción que ya se guardó.
+    console.error("[email] Error al enviar:", error);
+  }
 }
 
 export async function sendAppointmentConfirmedEmail(params: {
@@ -52,6 +58,22 @@ export async function sendAppointmentCancelledEmail(params: {
       patientName: params.patientName,
       dateLabel: params.dateLabel,
       startTime: params.startTime,
+    }),
+  });
+}
+
+export async function sendPasswordResetEmail(params: {
+  to: string;
+  patientName: string;
+  resetUrl: string;
+}) {
+  await safeSend({
+    from: FROM_EMAIL,
+    to: params.to,
+    subject: "Restablecé tu contraseña",
+    react: PasswordResetEmail({
+      patientName: params.patientName,
+      resetUrl: params.resetUrl,
     }),
   });
 }

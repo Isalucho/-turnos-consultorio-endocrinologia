@@ -13,8 +13,11 @@ export type TimeSlot = { startTime: string; endTime: string };
  * semanal, los bloqueos puntuales y los turnos ya confirmados. No persiste
  * "slots vacíos": se calculan on-demand en cada consulta. */
 export async function getAvailableSlots(date: Date): Promise<TimeSlot[]> {
+  const today = todayDateOnly();
+  if (date.getTime() < today.getTime()) return [];
+
   const dayOfWeek = date.getUTCDay();
-  const isToday = isSameDate(date, todayDateOnly());
+  const isToday = isSameDate(date, today);
 
   const [workingHours, blockedRanges, appointments] = await Promise.all([
     prisma.workingHours.findMany({ where: { dayOfWeek } }),

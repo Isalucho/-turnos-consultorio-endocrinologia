@@ -15,6 +15,18 @@ export const emailStyles = {
     padding: "16px",
     margin: "16px 0",
   },
+  button: {
+    backgroundColor: "#047857",
+    borderRadius: "6px",
+    color: "#ffffff",
+    display: "block",
+    fontSize: "14px",
+    fontWeight: 600,
+    padding: "12px 20px",
+    textAlign: "center" as const,
+    textDecoration: "none",
+    margin: "20px 0",
+  },
   footer: { color: "#94a3b8", fontSize: "12px", marginTop: "24px" },
 } as const;
 

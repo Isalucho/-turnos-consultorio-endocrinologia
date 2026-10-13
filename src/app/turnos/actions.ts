@@ -1,16 +1,19 @@
 "use server";
 
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { getAvailableSlots } from "@/lib/availability";
-import { formatDateLong, parseDateOnly } from "@/lib/dates";
+import { addDays, formatDateLong, parseDateOnly, todayDateOnly } from "@/lib/dates";
 import { sendAppointmentCancelledEmail, sendAppointmentConfirmedEmail, sendAppointmentRescheduledEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { requirePaciente } from "@/lib/session";
 import { BookAppointmentSchema } from "@/lib/validations";
 
 export type BookState = { message?: string } | undefined;
+
+const MAX_BOOKING_DAYS_AHEAD = 120;
 
 export async function bookAppointmentAction(_state: BookState, formData: FormData): Promise<BookState> {
   const user = await requirePaciente();
@@ -28,6 +31,11 @@ export async function bookAppointmentAction(_state: BookState, formData: FormDat
   const rescheduleId = (formData.get("rescheduleId") as string) || null;
   const { date: dateStr, startTime, reason } = validated.data;
   const date = parseDateOnly(dateStr);
+
+  const maxDate = addDays(todayDateOnly(), MAX_BOOKING_DAYS_AHEAD);
+  if (date.getTime() > maxDate.getTime()) {
+    return { message: `Solo se pueden sacar turnos con hasta ${MAX_BOOKING_DAYS_AHEAD} días de anticipación.` };
+  }
 
   // Se revalida la disponibilidad en el servidor por si cambió desde que se cargó la página.
   const slots = await getAvailableSlots(date);
@@ -74,7 +82,8 @@ export async function bookAppointmentAction(_state: BookState, formData: FormDat
       });
     });
   } catch (error) {
-    if (error instanceof Error && error.message === "SLOT_TAKEN") {
+    const isUniqueViolation = error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+    if (isUniqueViolation || (error instanceof Error && error.message === "SLOT_TAKEN")) {
       return { message: "Ese horario se acaba de ocupar. Elegí otro." };
     }
     throw error;
