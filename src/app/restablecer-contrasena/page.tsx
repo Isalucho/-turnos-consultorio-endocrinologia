@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 
 import { ResetPasswordForm } from "./reset-password-form";
 
+export const metadata = { robots: { index: false, follow: false } };
+
 export default async function ResetPasswordPage(props: PageProps<"/restablecer-contrasena">) {
   const searchParams = await props.searchParams;
   const token = typeof searchParams.token === "string" ? searchParams.token : undefined;

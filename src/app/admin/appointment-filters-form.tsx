@@ -9,9 +9,10 @@ import { Label } from "@/components/ui/label";
 type Props = {
   dateParam?: string;
   statusParam: string;
+  paymentParam: string;
 };
 
-export function AppointmentFiltersForm({ dateParam, statusParam }: Props) {
+export function AppointmentFiltersForm({ dateParam, statusParam, paymentParam }: Props) {
   return (
     <form method="get" className="flex flex-wrap items-end gap-3">
       <div className="flex flex-col gap-2">
@@ -37,6 +38,20 @@ export function AppointmentFiltersForm({ dateParam, statusParam }: Props) {
           <option value="CANCELLED">Cancelados</option>
           <option value="COMPLETED">Realizados</option>
           <option value="ALL">Todos</option>
+        </select>
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="pago">Cobro</Label>
+        <select
+          id="pago"
+          name="pago"
+          defaultValue={paymentParam}
+          onChange={(event) => event.currentTarget.form?.requestSubmit()}
+          className="h-8 w-36 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          <option value="ALL">Todos</option>
+          <option value="PENDING">Pendientes</option>
+          <option value="PAID">Cobrados</option>
         </select>
       </div>
       <Button type="submit" variant="outline">

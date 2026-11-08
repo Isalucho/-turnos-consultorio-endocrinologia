@@ -11,7 +11,9 @@ import { APPOINTMENT_STATUS_BADGE_VARIANT, APPOINTMENT_STATUS_LABEL } from "@/li
 import { getAvailableSlots } from "@/lib/availability";
 import { formatDateISO, formatDateLong, parseDateOnly, todayDateOnly } from "@/lib/dates";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { CONSULT_TYPE_LABEL, formatARS, PAYMENT_METHOD_LABEL } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
+import { suggestConsultType } from "@/lib/prices";
 
 import { deleteClinicalNoteAction, restoreClinicalNoteAction } from "../actions";
 import { AdminBookForm } from "./admin-book-form";
@@ -59,6 +61,7 @@ export default async function PatientDetailPage(props: PageProps<"/admin/pacient
       orderBy: [{ date: "desc" }, { startTime: "desc" }],
     }),
   ]);
+  const suggestedType = await suggestConsultType(id);
   const notes = allNotes.filter((note) => !note.deletedAt);
   const deletedNotes = allNotes.filter((note) => note.deletedAt);
 
@@ -115,6 +118,7 @@ export default async function PatientDetailPage(props: PageProps<"/admin/pacient
             date={selectedDateISO}
             slots={slots}
             hasEmail={!!patient.email}
+            suggestedType={suggestedType}
           />
         </CardContent>
       </Card>
@@ -133,6 +137,7 @@ export default async function PatientDetailPage(props: PageProps<"/admin/pacient
                     <TableHead>Horario</TableHead>
                     <TableHead>Motivo</TableHead>
                     <TableHead>Estado</TableHead>
+                    <TableHead>Cobro</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -149,6 +154,14 @@ export default async function PatientDetailPage(props: PageProps<"/admin/pacient
                         <Badge variant={APPOINTMENT_STATUS_BADGE_VARIANT[appointment.status]}>
                           {APPOINTMENT_STATUS_LABEL[appointment.status]}
                         </Badge>
+                        <div className="mt-1 text-xs text-zinc-500">{CONSULT_TYPE_LABEL[appointment.consultType]}</div>
+                      </TableCell>
+                      <TableCell className="text-sm text-zinc-600">
+                        {appointment.paymentStatus === "PAID"
+                          ? `${formatARS(appointment.amountPaid ?? 0)}${appointment.paymentMethod ? ` · ${PAYMENT_METHOD_LABEL[appointment.paymentMethod]}` : ""}`
+                          : appointment.status === "CANCELLED"
+                            ? "-"
+                            : "Pendiente"}
                       </TableCell>
                     </TableRow>
                   ))}

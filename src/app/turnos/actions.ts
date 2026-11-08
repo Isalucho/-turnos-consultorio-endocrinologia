@@ -8,6 +8,7 @@ import { getAvailableSlots } from "@/lib/availability";
 import { addDays, formatDateLong, parseDateOnly, todayDateOnly } from "@/lib/dates";
 import { sendAppointmentCancelledEmail, sendAppointmentConfirmedEmail, sendAppointmentRescheduledEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
+import { suggestConsultType } from "@/lib/prices";
 import { requirePaciente } from "@/lib/session";
 import { BookAppointmentSchema } from "@/lib/validations";
 
@@ -78,6 +79,8 @@ export async function bookAppointmentAction(_state: BookState, formData: FormDat
           startTime: slot.startTime,
           endTime: slot.endTime,
           reason,
+          // Se calcula antes de cancelar el turno anterior en una reprogramación, para no volver a "primera consulta".
+          consultType: previousAppointment?.consultType ?? (await suggestConsultType(user.id, tx)),
         },
       });
     });

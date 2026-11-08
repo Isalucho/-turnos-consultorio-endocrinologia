@@ -1,14 +1,19 @@
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { APPOINTMENT_STATUS_BADGE_VARIANT, APPOINTMENT_STATUS_LABEL } from "@/lib/appointment-status";
 import { formatDateLong, parseDateOnly, todayDateOnly } from "@/lib/dates";
+import { CONSULT_TYPE_LABEL, formatARS, PAYMENT_METHOD_LABEL } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
-import type { AppointmentStatus, Prisma } from "@prisma/client";
+import { getPrices, priceFor } from "@/lib/prices";
+import type { AppointmentStatus, PaymentStatus, Prisma } from "@prisma/client";
 
-import { adminCancelAppointmentAction, markAppointmentCompletedAction } from "./actions";
+import { adminCancelAppointmentAction, markAppointmentCompletedAction, undoPaymentAction } from "./actions";
 import { AppointmentFiltersForm } from "./appointment-filters-form";
+import { PaymentForm } from "./payment-form";
 
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -16,6 +21,8 @@ export default async function AdminAppointmentsPage(props: PageProps<"/admin">) 
   const searchParams = await props.searchParams;
   const dateParam = typeof searchParams.date === "string" && ISO_DATE_RE.test(searchParams.date) ? searchParams.date : undefined;
   const statusParam = typeof searchParams.status === "string" ? searchParams.status : "CONFIRMED";
+  const paymentParam = typeof searchParams.pago === "string" ? searchParams.pago : "ALL";
+  const paymentError = typeof searchParams.pagoError === "string" ? searchParams.pagoError : undefined;
 
   const where: Prisma.AppointmentWhereInput = {};
   if (dateParam) {
@@ -26,28 +33,84 @@ export default async function AdminAppointmentsPage(props: PageProps<"/admin">) 
   if (statusParam !== "ALL") {
     where.status = statusParam as AppointmentStatus;
   }
+  if (paymentParam === "PENDING" || paymentParam === "PAID") {
+    where.paymentStatus = paymentParam as PaymentStatus;
+    where.status = statusParam === "ALL" ? { not: "CANCELLED" } : where.status;
+  }
 
-  const appointments = await prisma.appointment.findMany({
-    where,
-    include: { patient: true },
-    orderBy: [{ date: "asc" }, { startTime: "asc" }],
-  });
+  const [appointments, prices] = await Promise.all([
+    prisma.appointment.findMany({
+      where,
+      include: { patient: true },
+      orderBy: [{ date: "asc" }, { startTime: "asc" }],
+    }),
+    getPrices(),
+  ]);
+
+  const paid = appointments.filter((a) => a.paymentStatus === "PAID");
+  const totalPaid = paid.reduce((sum, a) => sum + (a.amountPaid ?? 0), 0);
+  const totalByMethod = (method: "EFECTIVO" | "TRANSFERENCIA") =>
+    paid.filter((a) => a.paymentMethod === method).reduce((sum, a) => sum + (a.amountPaid ?? 0), 0);
+  const pendingCount = appointments.filter((a) => a.status !== "CANCELLED" && a.paymentStatus === "PENDING").length;
+  const pricesMissing = prices.firstConsultPrice === 0 && prices.followUpPrice === 0;
 
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold text-zinc-900">Turnos</h1>
-        <p className="text-zinc-600">Listado de todos los turnos del consultorio.</p>
+        <p className="text-zinc-600">Listado de los turnos del consultorio y su cobro.</p>
       </div>
+
+      {paymentError && (
+        <Alert variant="destructive">
+          <AlertDescription>{paymentError}</AlertDescription>
+        </Alert>
+      )}
+
+      {pricesMissing && (
+        <Alert>
+          <AlertDescription>
+            Todavía no cargaste los precios de consulta, así que el monto a cobrar aparece en $0. Cargalos en{" "}
+            <a href="/admin/precios" className="font-medium underline underline-offset-2">
+              Precios
+            </a>
+            .
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Filtros</CardTitle>
         </CardHeader>
         <CardContent>
-          <AppointmentFiltersForm dateParam={dateParam} statusParam={statusParam} />
+          <AppointmentFiltersForm dateParam={dateParam} statusParam={statusParam} paymentParam={paymentParam} />
         </CardContent>
       </Card>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Card size="sm">
+          <CardContent>
+            <p className="text-xs text-zinc-500">Cobrado (en este listado)</p>
+            <p className="text-xl font-semibold text-zinc-900">{formatARS(totalPaid)}</p>
+            <p className="text-xs text-zinc-500">
+              Efectivo {formatARS(totalByMethod("EFECTIVO"))} · Transferencia {formatARS(totalByMethod("TRANSFERENCIA"))}
+            </p>
+          </CardContent>
+        </Card>
+        <Card size="sm">
+          <CardContent>
+            <p className="text-xs text-zinc-500">Pendientes de cobro</p>
+            <p className="text-xl font-semibold text-zinc-900">{pendingCount}</p>
+          </CardContent>
+        </Card>
+        <Card size="sm">
+          <CardContent>
+            <p className="text-xs text-zinc-500">Turnos en el listado</p>
+            <p className="text-xl font-semibold text-zinc-900">{appointments.length}</p>
+          </CardContent>
+        </Card>
+      </div>
 
       <Card>
         <CardContent>
@@ -57,61 +120,102 @@ export default async function AdminAppointmentsPage(props: PageProps<"/admin">) 
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Horario</TableHead>
+                  <TableHead>Fecha y hora</TableHead>
                   <TableHead>Paciente</TableHead>
-                  <TableHead>Contacto</TableHead>
-                  <TableHead>Motivo</TableHead>
                   <TableHead>Estado</TableHead>
+                  <TableHead>Cobro</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {appointments.map((appointment) => (
-                  <TableRow key={appointment.id}>
-                    <TableCell>{formatDateLong(appointment.date)}</TableCell>
-                    <TableCell>
-                      {appointment.startTime} - {appointment.endTime}
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium text-zinc-900">{appointment.patient.name}</div>
-                      <div className="text-xs text-zinc-500">
-                        DNI {appointment.patient.dni}
-                        {appointment.patient.obraSocial ? ` · ${appointment.patient.obraSocial}` : ""}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm text-zinc-600">
-                      {appointment.patient.email && <div>{appointment.patient.email}</div>}
-                      <div>{appointment.patient.phone}</div>
-                    </TableCell>
-                    <TableCell className="max-w-40 truncate text-sm text-zinc-600">
-                      {appointment.reason ?? "-"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={APPOINTMENT_STATUS_BADGE_VARIANT[appointment.status]}>
-                        {APPOINTMENT_STATUS_LABEL[appointment.status]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {appointment.status === "CONFIRMED" && (
-                        <div className="flex justify-end gap-2">
-                          <form action={markAppointmentCompletedAction}>
-                            <input type="hidden" name="id" value={appointment.id} />
-                            <Button type="submit" size="sm" variant="outline">
-                              Marcar realizado
-                            </Button>
-                          </form>
-                          <form action={adminCancelAppointmentAction}>
-                            <input type="hidden" name="id" value={appointment.id} />
-                            <Button type="submit" size="sm" variant="destructive">
-                              Cancelar
-                            </Button>
-                          </form>
+                {appointments.map((appointment) => {
+                  const canCharge = appointment.status !== "CANCELLED" && appointment.paymentStatus === "PENDING";
+                  return (
+                    <TableRow key={appointment.id}>
+                      <TableCell>
+                        <div className="font-medium text-zinc-900">{appointment.startTime} hs</div>
+                        <div className="text-xs text-zinc-500">{formatDateLong(appointment.date)}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium text-zinc-900">{appointment.patient.name}</div>
+                        <div className="text-xs text-zinc-500">
+                          DNI {appointment.patient.dni}
+                          {appointment.patient.obraSocial ? ` · ${appointment.patient.obraSocial}` : ""}
                         </div>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                        <div className="text-xs text-zinc-500">
+                          {appointment.patient.phone}
+                          {appointment.patient.email ? ` · ${appointment.patient.email}` : ""}
+                        </div>
+                        {appointment.reason && (
+                          <div className="mt-0.5 max-w-60 truncate text-xs text-zinc-600">{appointment.reason}</div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={APPOINTMENT_STATUS_BADGE_VARIANT[appointment.status]}>
+                          {APPOINTMENT_STATUS_LABEL[appointment.status]}
+                        </Badge>
+                        <div className="mt-1 text-xs text-zinc-500">{CONSULT_TYPE_LABEL[appointment.consultType]}</div>
+                      </TableCell>
+                      <TableCell>
+                        {appointment.paymentStatus === "PAID" ? (
+                          <div className="flex flex-col items-start gap-1">
+                            <Badge variant="secondary">Pagado</Badge>
+                            <span className="text-xs text-zinc-600">
+                              {formatARS(appointment.amountPaid ?? 0)}
+                              {appointment.paymentMethod ? ` · ${PAYMENT_METHOD_LABEL[appointment.paymentMethod]}` : ""}
+                            </span>
+                            <form action={undoPaymentAction}>
+                              <input type="hidden" name="id" value={appointment.id} />
+                              <ConfirmSubmitButton
+                                size="xs"
+                                variant="ghost"
+                                confirmMessage="¿Deshacer el cobro de este turno? Va a volver a figurar como pendiente."
+                              >
+                                Deshacer cobro
+                              </ConfirmSubmitButton>
+                            </form>
+                          </div>
+                        ) : canCharge ? (
+                          <PaymentForm
+                            id={appointment.id}
+                            defaultType={appointment.consultType}
+                            firstConsultPrice={prices.firstConsultPrice}
+                            followUpPrice={prices.followUpPrice}
+                          />
+                        ) : (
+                          <span className="text-xs text-zinc-400">-</span>
+                        )}
+                        {canCharge && (
+                          <p className="mt-1 text-xs text-zinc-400">
+                            Sugerido: {formatARS(priceFor(appointment.consultType, prices))}
+                          </p>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {appointment.status === "CONFIRMED" && (
+                          <div className="flex flex-col items-end gap-1.5">
+                            <form action={markAppointmentCompletedAction}>
+                              <input type="hidden" name="id" value={appointment.id} />
+                              <Button type="submit" size="sm" variant="outline">
+                                Marcar realizado
+                              </Button>
+                            </form>
+                            <form action={adminCancelAppointmentAction}>
+                              <input type="hidden" name="id" value={appointment.id} />
+                              <ConfirmSubmitButton
+                                size="sm"
+                                variant="destructive"
+                                confirmMessage="¿Cancelar este turno? Si el paciente tiene email, se le avisa."
+                              >
+                                Cancelar
+                              </ConfirmSubmitButton>
+                            </form>
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}

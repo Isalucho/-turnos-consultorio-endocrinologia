@@ -7,7 +7,7 @@ import { formatDateLong, parseDateOnly, todayDateOnly } from "@/lib/dates";
 import { sendAppointmentCancelledEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
-import { BlockedDateSchema, WorkingHoursSchema } from "@/lib/validations";
+import { BlockedDateSchema, PaymentSchema, WorkingHoursSchema } from "@/lib/validations";
 
 export type FormActionState = { message?: string } | undefined;
 
@@ -171,5 +171,44 @@ export async function markAppointmentCompletedAction(formData: FormData) {
   await requireAdmin();
   const id = formData.get("id") as string;
   await prisma.appointment.updateMany({ where: { id, status: "CONFIRMED" }, data: { status: "COMPLETED" } });
+  revalidatePath("/admin");
+}
+
+export type PaymentState = { message?: string } | undefined;
+
+export async function markAppointmentPaidAction(formData: FormData) {
+  await requireAdmin();
+
+  const validated = PaymentSchema.safeParse({
+    id: formData.get("id"),
+    method: formData.get("method"),
+    consultType: formData.get("consultType"),
+    amount: formData.get("amount"),
+  });
+  if (!validated.success) {
+    const message = validated.error.issues[0]?.message ?? "Datos de cobro inválidos.";
+    redirect(`/admin?pagoError=${encodeURIComponent(message)}`);
+  }
+
+  const { id, method, consultType, amount } = validated.data;
+
+  // Solo se cobran turnos confirmados o realizados, y una sola vez: no se pisa un cobro ya registrado.
+  await prisma.appointment.updateMany({
+    where: { id, status: { in: ["CONFIRMED", "COMPLETED"] }, paymentStatus: "PENDING" },
+    data: { paymentStatus: "PAID", paymentMethod: method, consultType, amountPaid: amount, paidAt: new Date() },
+  });
+
+  revalidatePath("/admin");
+}
+
+export async function undoPaymentAction(formData: FormData) {
+  await requireAdmin();
+  const id = formData.get("id") as string;
+
+  await prisma.appointment.updateMany({
+    where: { id, paymentStatus: "PAID" },
+    data: { paymentStatus: "PENDING", paymentMethod: null, amountPaid: null, paidAt: null },
+  });
+
   revalidatePath("/admin");
 }

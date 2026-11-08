@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import { Toaster } from "@/components/ui/sonner";
+import { clinic, getSiteUrl } from "@/lib/clinic";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,9 +15,20 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const where = clinic.city ? ` en ${clinic.city}` : "";
+const siteName = clinic.doctor ? `${clinic.doctor} · Endocrinología` : "Consultorio de Endocrinología";
+
 export const metadata: Metadata = {
-  title: "Consultorio de Endocrinología | Turnos",
-  description: "Sacá o gestioná tu turno con la endocrinóloga online.",
+  metadataBase: new URL(getSiteUrl()),
+  title: { default: `${siteName} | Turnos online`, template: `%s | ${siteName}` },
+  description: `Sacá o gestioná tu turno online con la endocrinóloga${where}. Elegí día y horario sin llamadas ni esperas.`,
+  openGraph: {
+    type: "website",
+    locale: "es_AR",
+    siteName,
+    title: `${siteName} | Turnos online`,
+    description: `Sacá tu turno online con la endocrinóloga${where}.`,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -2,7 +2,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAvailableSlots } from "@/lib/availability";
 import { formatDateISO, formatDateLong, parseDateOnly, todayDateOnly } from "@/lib/dates";
+import { formatARS } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
+import { getPrices, priceFor, suggestConsultType } from "@/lib/prices";
 import { requirePaciente } from "@/lib/session";
 
 import { BookForm } from "./book-form";
@@ -31,6 +33,9 @@ export default async function TurnosPage(props: PageProps<"/turnos">) {
   const selectedDate = parseDateOnly(selectedDateISO);
   const slots = await getAvailableSlots(selectedDate);
 
+  const prices = await getPrices();
+  const yourPrice = priceFor(await suggestConsultType(user.id), prices);
+
   const rescheduleAppointment = rescheduleId
     ? await prisma.appointment.findFirst({
         where: { id: rescheduleId, patientId: user.id, status: "CONFIRMED" },
@@ -42,6 +47,11 @@ export default async function TurnosPage(props: PageProps<"/turnos">) {
       <div>
         <h1 className="text-2xl font-semibold text-zinc-900">Sacar turno</h1>
         <p className="text-zinc-600">Elegí un día y horario disponible.</p>
+        {yourPrice > 0 && (
+          <p className="mt-1 text-sm text-zinc-500">
+            Valor de tu consulta: {formatARS(yourPrice)}. Se abona en el consultorio (efectivo) o por transferencia.
+          </p>
+        )}
       </div>
 
       {rescheduleAppointment && (

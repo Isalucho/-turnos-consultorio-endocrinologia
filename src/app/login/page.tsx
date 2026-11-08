@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 import { LoginForm } from "./login-form";
 
+export const metadata = { robots: { index: false, follow: false } };
+
 export default async function LoginPage(props: PageProps<"/login">) {
   const session = await auth();
   const searchParams = await props.searchParams;

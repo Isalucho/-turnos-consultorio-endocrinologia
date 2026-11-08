@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 import { RegisterForm } from "./register-form";
 
+export const metadata = { robots: { index: false, follow: false } };
+
 export default async function RegistroPage() {
   const session = await auth();
 

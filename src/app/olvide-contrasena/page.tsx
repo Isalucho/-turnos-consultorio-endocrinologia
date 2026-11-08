@@ -2,6 +2,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 import { ForgotPasswordForm } from "./forgot-password-form";
 
+export const metadata = { robots: { index: false, follow: false } };
+
 export default function ForgotPasswordPage() {
   return (
     <div className="flex flex-1 items-center justify-center bg-zinc-50 px-4 py-12">

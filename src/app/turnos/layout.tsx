@@ -1,6 +1,8 @@
 import { SiteHeader } from "@/components/site-header";
 import { requirePaciente } from "@/lib/session";
 
+export const metadata = { robots: { index: false, follow: false } };
+
 export default async function TurnosLayout({ children }: { children: React.ReactNode }) {
   const user = await requirePaciente();
 

@@ -17,6 +17,29 @@ enum AppointmentStatus {
   COMPLETED
 }
 
+enum ConsultType {
+  PRIMERA
+  CONTROL
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+}
+
+enum PaymentMethod {
+  EFECTIVO
+  TRANSFERENCIA
+}
+
+// Una sola fila (id = 1) con los valores de consulta vigentes.
+model ClinicSettings {
+  id                Int      @id @default(1)
+  firstConsultPrice Int      @default(0)
+  followUpPrice     Int      @default(0)
+  updatedAt         DateTime @updatedAt
+}
+
 model User {
   id                String    @id @default(cuid())
   name              String
@@ -84,6 +107,13 @@ model Appointment {
   reason    String?
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
+
+  consultType   ConsultType   @default(CONTROL)
+  paymentStatus PaymentStatus @default(PENDING)
+  paymentMethod PaymentMethod?
+  // Monto efectivamente cobrado, en pesos. Se guarda al cobrar: si después cambia el precio, no se altera lo ya cobrado.
+  amountPaid    Int?
+  paidAt        DateTime?
 
   // Nota: la unicidad real de horario (evitar doble-booking) se aplica con un
   // índice único parcial (WHERE status = 'CONFIRMED') agregado a mano en la

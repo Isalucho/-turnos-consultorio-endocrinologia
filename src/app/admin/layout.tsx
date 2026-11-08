@@ -1,6 +1,8 @@
 import { SiteHeader } from "@/components/site-header";
 import { requireAdmin } from "@/lib/session";
 
+export const metadata = { robots: { index: false, follow: false } };
+
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await requireAdmin();
 

@@ -14,9 +14,10 @@ type Props = {
   date: string;
   slots: TimeSlot[];
   hasEmail: boolean;
+  suggestedType: "PRIMERA" | "CONTROL";
 };
 
-export function AdminBookForm({ patientId, date, slots, hasEmail }: Props) {
+export function AdminBookForm({ patientId, date, slots, hasEmail, suggestedType }: Props) {
   const [state, formAction, pending] = useActionState(adminBookAppointmentAction, initialState);
 
   if (slots.length === 0) {
@@ -37,6 +38,24 @@ export function AdminBookForm({ patientId, date, slots, hasEmail }: Props) {
             </span>
           </label>
         ))}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 text-sm text-zinc-700">
+        <label htmlFor="consultType">Tipo de consulta</label>
+        <select
+          id="consultType"
+          name="consultType"
+          defaultValue={suggestedType}
+          className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          <option value="PRIMERA">Primera consulta</option>
+          <option value="CONTROL">Control</option>
+        </select>
+        <span className="text-xs text-zinc-500">
+          {suggestedType === "PRIMERA"
+            ? "Sugerido: es su primer turno en el sistema. Cambialo a Control si ya se atendía antes."
+            : "Sugerido: ya tiene turnos cargados."}
+        </span>
       </div>
 
       <Textarea name="reason" placeholder="Motivo de la consulta (opcional)" maxLength={300} />

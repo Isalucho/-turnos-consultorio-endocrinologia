@@ -8,6 +8,7 @@ import { getAvailableSlots } from "@/lib/availability";
 import { formatDateISO, formatDateLong, parseDateOnly, todayDateOnly } from "@/lib/dates";
 import { sendAppointmentConfirmedEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
+import { suggestConsultType } from "@/lib/prices";
 import { requireAdmin } from "@/lib/session";
 import { AdminBookAppointmentSchema, AdminCreatePatientSchema, ClinicalNoteSchema } from "@/lib/validations";
 
@@ -68,13 +69,14 @@ export async function adminBookAppointmentAction(_state: AdminBookState, formDat
     date: formData.get("date"),
     startTime: formData.get("startTime"),
     reason: (formData.get("reason") as string) || undefined,
+    consultType: (formData.get("consultType") as string) || undefined,
   });
 
   if (!validated.success) {
     return { message: "Elegí un horario válido para continuar." };
   }
 
-  const { patientId, date: dateStr, startTime, reason } = validated.data;
+  const { patientId, date: dateStr, startTime, reason, consultType } = validated.data;
   const date = parseDateOnly(dateStr);
 
   if (Number.isNaN(date.getTime()) || date.getTime() < todayDateOnly().getTime()) {
@@ -100,7 +102,14 @@ export async function adminBookAppointmentAction(_state: AdminBookState, formDat
       if (clash) throw new Error("SLOT_TAKEN");
 
       await tx.appointment.create({
-        data: { patientId, date, startTime: slot.startTime, endTime: slot.endTime, reason },
+        data: {
+          patientId,
+          date,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          reason,
+          consultType: consultType ?? (await suggestConsultType(patientId, tx)),
+        },
       });
     });
   } catch (error) {
