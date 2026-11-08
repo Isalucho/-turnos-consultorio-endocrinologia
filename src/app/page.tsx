@@ -52,6 +52,9 @@ export default async function Home() {
           Registrate, elegí el día y horario que más te convenga, y gestioná tus turnos desde
           cualquier lugar.
         </p>
+        <p className="mb-8 text-base font-medium text-zinc-700">
+          Atendemos todas las obras sociales.
+        </p>
         <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link href={ctaHref} className={buttonVariants({ size: "lg" })}>
             {session?.user ? "Ir a mis turnos" : "Registrarme"}

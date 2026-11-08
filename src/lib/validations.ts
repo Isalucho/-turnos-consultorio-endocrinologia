@@ -58,23 +58,12 @@ export const AdminBookAppointmentSchema = z.object({
   consultType: z.enum(["PRIMERA", "CONTROL"]).optional(),
 });
 
-const pesos = z.coerce
-  .number({ error: "Ingresá un monto válido." })
-  .int("El monto debe ser un número entero de pesos.")
-  .min(0, "El monto no puede ser negativo.")
-  .max(100_000_000, "El monto es demasiado grande.");
-
 export const PaymentSchema = z.object({
   id: z.string().min(1),
   method: z.enum(["EFECTIVO", "TRANSFERENCIA"], { error: "Elegí cómo pagó." }),
   consultType: z.enum(["PRIMERA", "CONTROL"]),
-  amount: pesos,
 });
 
-export const PricesSchema = z.object({
-  firstConsultPrice: pesos,
-  followUpPrice: pesos,
-});
 
 export const ForgotPasswordSchema = z.object({
   email: z.email("Ingresá un email válido.").trim(),

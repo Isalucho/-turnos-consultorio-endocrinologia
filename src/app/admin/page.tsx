@@ -6,9 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { APPOINTMENT_STATUS_BADGE_VARIANT, APPOINTMENT_STATUS_LABEL } from "@/lib/appointment-status";
 import { formatDateLong, parseDateOnly, todayDateOnly } from "@/lib/dates";
-import { CONSULT_TYPE_LABEL, formatARS, PAYMENT_METHOD_LABEL } from "@/lib/money";
+import { CONSULT_TYPE_LABEL, PAYMENT_METHOD_LABEL } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
-import { getPrices, priceFor } from "@/lib/prices";
 import type { AppointmentStatus, PaymentStatus, Prisma } from "@prisma/client";
 
 import { adminCancelAppointmentAction, markAppointmentCompletedAction, undoPaymentAction } from "./actions";
@@ -38,27 +37,21 @@ export default async function AdminAppointmentsPage(props: PageProps<"/admin">) 
     where.status = statusParam === "ALL" ? { not: "CANCELLED" } : where.status;
   }
 
-  const [appointments, prices] = await Promise.all([
-    prisma.appointment.findMany({
-      where,
-      include: { patient: true },
-      orderBy: [{ date: "asc" }, { startTime: "asc" }],
-    }),
-    getPrices(),
-  ]);
+  const appointments = await prisma.appointment.findMany({
+    where,
+    include: { patient: true },
+    orderBy: [{ date: "asc" }, { startTime: "asc" }],
+  });
 
   const paid = appointments.filter((a) => a.paymentStatus === "PAID");
-  const totalPaid = paid.reduce((sum, a) => sum + (a.amountPaid ?? 0), 0);
-  const totalByMethod = (method: "EFECTIVO" | "TRANSFERENCIA") =>
-    paid.filter((a) => a.paymentMethod === method).reduce((sum, a) => sum + (a.amountPaid ?? 0), 0);
+  const countByMethod = (method: "EFECTIVO" | "TRANSFERENCIA") => paid.filter((a) => a.paymentMethod === method).length;
   const pendingCount = appointments.filter((a) => a.status !== "CANCELLED" && a.paymentStatus === "PENDING").length;
-  const pricesMissing = prices.firstConsultPrice === 0 && prices.followUpPrice === 0;
 
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold text-zinc-900">Turnos</h1>
-        <p className="text-zinc-600">Listado de los turnos del consultorio y su cobro.</p>
+        <p className="text-zinc-600">Listado de los turnos del consultorio y si ya pagaron.</p>
       </div>
 
       {paymentError && (
@@ -67,17 +60,6 @@ export default async function AdminAppointmentsPage(props: PageProps<"/admin">) 
         </Alert>
       )}
 
-      {pricesMissing && (
-        <Alert>
-          <AlertDescription>
-            Todavía no cargaste los precios de consulta, así que el monto a cobrar aparece en $0. Cargalos en{" "}
-            <a href="/admin/precios" className="font-medium underline underline-offset-2">
-              Precios
-            </a>
-            .
-          </AlertDescription>
-        </Alert>
-      )}
 
       <Card>
         <CardHeader>
@@ -91,16 +73,16 @@ export default async function AdminAppointmentsPage(props: PageProps<"/admin">) 
       <div className="grid gap-3 sm:grid-cols-3">
         <Card size="sm">
           <CardContent>
-            <p className="text-xs text-zinc-500">Cobrado (en este listado)</p>
-            <p className="text-xl font-semibold text-zinc-900">{formatARS(totalPaid)}</p>
+            <p className="text-xs text-zinc-500">Pagados (en este listado)</p>
+            <p className="text-xl font-semibold text-zinc-900">{paid.length}</p>
             <p className="text-xs text-zinc-500">
-              Efectivo {formatARS(totalByMethod("EFECTIVO"))} · Transferencia {formatARS(totalByMethod("TRANSFERENCIA"))}
+              Efectivo {countByMethod("EFECTIVO")} · Transferencia {countByMethod("TRANSFERENCIA")}
             </p>
           </CardContent>
         </Card>
         <Card size="sm">
           <CardContent>
-            <p className="text-xs text-zinc-500">Pendientes de cobro</p>
+            <p className="text-xs text-zinc-500">Pendientes de pago</p>
             <p className="text-xl font-semibold text-zinc-900">{pendingCount}</p>
           </CardContent>
         </Card>
@@ -161,17 +143,16 @@ export default async function AdminAppointmentsPage(props: PageProps<"/admin">) 
                           <div className="flex flex-col items-start gap-1">
                             <Badge variant="secondary">Pagado</Badge>
                             <span className="text-xs text-zinc-600">
-                              {formatARS(appointment.amountPaid ?? 0)}
-                              {appointment.paymentMethod ? ` · ${PAYMENT_METHOD_LABEL[appointment.paymentMethod]}` : ""}
+                              {appointment.paymentMethod ? PAYMENT_METHOD_LABEL[appointment.paymentMethod] : ""}
                             </span>
                             <form action={undoPaymentAction}>
                               <input type="hidden" name="id" value={appointment.id} />
                               <ConfirmSubmitButton
                                 size="xs"
                                 variant="ghost"
-                                confirmMessage="¿Deshacer el cobro de este turno? Va a volver a figurar como pendiente."
+                                confirmMessage="¿Deshacer el pago de este turno? Va a volver a figurar como pendiente."
                               >
-                                Deshacer cobro
+                                Deshacer pago
                               </ConfirmSubmitButton>
                             </form>
                           </div>
@@ -179,16 +160,9 @@ export default async function AdminAppointmentsPage(props: PageProps<"/admin">) 
                           <PaymentForm
                             id={appointment.id}
                             defaultType={appointment.consultType}
-                            firstConsultPrice={prices.firstConsultPrice}
-                            followUpPrice={prices.followUpPrice}
                           />
                         ) : (
                           <span className="text-xs text-zinc-400">-</span>
-                        )}
-                        {canCharge && (
-                          <p className="mt-1 text-xs text-zinc-400">
-                            Sugerido: {formatARS(priceFor(appointment.consultType, prices))}
-                          </p>
                         )}
                       </TableCell>
                       <TableCell className="text-right">

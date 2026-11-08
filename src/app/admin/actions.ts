@@ -183,19 +183,18 @@ export async function markAppointmentPaidAction(formData: FormData) {
     id: formData.get("id"),
     method: formData.get("method"),
     consultType: formData.get("consultType"),
-    amount: formData.get("amount"),
   });
   if (!validated.success) {
     const message = validated.error.issues[0]?.message ?? "Datos de cobro inválidos.";
     redirect(`/admin?pagoError=${encodeURIComponent(message)}`);
   }
 
-  const { id, method, consultType, amount } = validated.data;
+  const { id, method, consultType } = validated.data;
 
   // Solo se cobran turnos confirmados o realizados, y una sola vez: no se pisa un cobro ya registrado.
   await prisma.appointment.updateMany({
     where: { id, status: { in: ["CONFIRMED", "COMPLETED"] }, paymentStatus: "PENDING" },
-    data: { paymentStatus: "PAID", paymentMethod: method, consultType, amountPaid: amount, paidAt: new Date() },
+    data: { paymentStatus: "PAID", paymentMethod: method, consultType, paidAt: new Date() },
   });
 
   revalidatePath("/admin");
@@ -207,7 +206,7 @@ export async function undoPaymentAction(formData: FormData) {
 
   await prisma.appointment.updateMany({
     where: { id, paymentStatus: "PAID" },
-    data: { paymentStatus: "PENDING", paymentMethod: null, amountPaid: null, paidAt: null },
+    data: { paymentStatus: "PENDING", paymentMethod: null, paidAt: null },
   });
 
   revalidatePath("/admin");

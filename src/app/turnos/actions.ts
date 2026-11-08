@@ -8,7 +8,7 @@ import { getAvailableSlots } from "@/lib/availability";
 import { addDays, formatDateLong, parseDateOnly, todayDateOnly } from "@/lib/dates";
 import { sendAppointmentCancelledEmail, sendAppointmentConfirmedEmail, sendAppointmentRescheduledEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
-import { suggestConsultType } from "@/lib/prices";
+import { suggestConsultType } from "@/lib/consult";
 import { requirePaciente } from "@/lib/session";
 import { BookAppointmentSchema } from "@/lib/validations";
 

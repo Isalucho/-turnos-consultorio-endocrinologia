@@ -41,9 +41,6 @@ export function SiteHeader({ name, role }: Props) {
               <Link href="/admin/pacientes" className="text-zinc-600 hover:text-zinc-900">
                 Pacientes
               </Link>
-              <Link href="/admin/precios" className="text-zinc-600 hover:text-zinc-900">
-                Precios
-              </Link>
             </>
           )}
           <span className="text-zinc-300">|</span>

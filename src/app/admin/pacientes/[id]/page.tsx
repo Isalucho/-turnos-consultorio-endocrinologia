@@ -11,9 +11,9 @@ import { APPOINTMENT_STATUS_BADGE_VARIANT, APPOINTMENT_STATUS_LABEL } from "@/li
 import { getAvailableSlots } from "@/lib/availability";
 import { formatDateISO, formatDateLong, parseDateOnly, todayDateOnly } from "@/lib/dates";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
-import { CONSULT_TYPE_LABEL, formatARS, PAYMENT_METHOD_LABEL } from "@/lib/money";
+import { CONSULT_TYPE_LABEL, PAYMENT_METHOD_LABEL } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
-import { suggestConsultType } from "@/lib/prices";
+import { suggestConsultType } from "@/lib/consult";
 
 import { deleteClinicalNoteAction, restoreClinicalNoteAction } from "../actions";
 import { AdminBookForm } from "./admin-book-form";
@@ -137,7 +137,7 @@ export default async function PatientDetailPage(props: PageProps<"/admin/pacient
                     <TableHead>Horario</TableHead>
                     <TableHead>Motivo</TableHead>
                     <TableHead>Estado</TableHead>
-                    <TableHead>Cobro</TableHead>
+                    <TableHead>Pago</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -158,7 +158,7 @@ export default async function PatientDetailPage(props: PageProps<"/admin/pacient
                       </TableCell>
                       <TableCell className="text-sm text-zinc-600">
                         {appointment.paymentStatus === "PAID"
-                          ? `${formatARS(appointment.amountPaid ?? 0)}${appointment.paymentMethod ? ` · ${PAYMENT_METHOD_LABEL[appointment.paymentMethod]}` : ""}`
+                          ? `Pagado${appointment.paymentMethod ? ` · ${PAYMENT_METHOD_LABEL[appointment.paymentMethod]}` : ""}`
                           : appointment.status === "CANCELLED"
                             ? "-"
                             : "Pendiente"}

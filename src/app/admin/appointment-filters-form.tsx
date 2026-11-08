@@ -41,7 +41,7 @@ export function AppointmentFiltersForm({ dateParam, statusParam, paymentParam }:
         </select>
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="pago">Cobro</Label>
+        <Label htmlFor="pago">Pago</Label>
         <select
           id="pago"
           name="pago"
@@ -51,7 +51,7 @@ export function AppointmentFiltersForm({ dateParam, statusParam, paymentParam }:
         >
           <option value="ALL">Todos</option>
           <option value="PENDING">Pendientes</option>
-          <option value="PAID">Cobrados</option>
+          <option value="PAID">Pagados</option>
         </select>
       </div>
       <Button type="submit" variant="outline">
