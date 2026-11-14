@@ -116,7 +116,7 @@ export async function bookAppointmentAction(_state: BookState, formData: FormDat
     });
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   redirect("/turnos/mis-turnos?confirmado=1");
 }
 
@@ -139,5 +139,5 @@ export async function cancelAppointmentAction(formData: FormData) {
   });
 
   revalidatePath("/turnos/mis-turnos");
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
 }

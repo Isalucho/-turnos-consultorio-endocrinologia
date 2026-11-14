@@ -130,7 +130,7 @@ export async function adminBookAppointmentAction(_state: AdminBookState, formDat
     });
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   revalidatePath(`/admin/pacientes/${patientId}`);
   redirect(`/admin/pacientes/${patientId}?date=${dateStr}&turno=ok&hora=${slot.startTime}`);
 }

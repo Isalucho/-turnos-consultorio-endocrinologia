@@ -60,7 +60,7 @@ export function WorkingHoursForm() {
         {pending ? "Agregando..." : "Agregar franja"}
       </Button>
 
-      {state?.message && <p className="w-full text-sm text-red-600">{state.message}</p>}
+      {state?.message && <p className="w-full text-sm text-red-400">{state.message}</p>}
     </form>
   );
 }

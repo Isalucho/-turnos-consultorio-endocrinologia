@@ -15,8 +15,8 @@ export default async function BloqueosPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900">Bloqueos</h1>
-        <p className="text-zinc-600">
+        <h1 className="text-2xl font-semibold text-foreground">Bloqueos</h1>
+        <p className="text-muted-foreground">
           Bloqueá días completos o franjas horarias puntuales (vacaciones, feriados, ausencias).
         </p>
       </div>
@@ -36,17 +36,17 @@ export default async function BloqueosPage() {
         </CardHeader>
         <CardContent>
           {blockedDates.length === 0 ? (
-            <p className="text-sm text-zinc-500">No hay bloqueos programados.</p>
+            <p className="text-sm text-muted-foreground">No hay bloqueos programados.</p>
           ) : (
             <div className="flex flex-col gap-2">
               {blockedDates.map((blocked) => (
                 <div
                   key={blocked.id}
-                  className="flex items-center justify-between rounded-md border border-zinc-200 bg-white px-4 py-3 text-sm"
+                  className="flex items-center justify-between rounded-md border border-border bg-card px-4 py-3 text-sm"
                 >
                   <div>
-                    <span className="font-medium text-zinc-900">{formatDateLong(blocked.date)}</span>{" "}
-                    <span className="text-zinc-600">
+                    <span className="font-medium text-foreground">{formatDateLong(blocked.date)}</span>{" "}
+                    <span className="text-muted-foreground">
                       {blocked.startTime && blocked.endTime
                         ? `de ${blocked.startTime} a ${blocked.endTime} hs`
                         : "día completo"}

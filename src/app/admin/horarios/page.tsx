@@ -20,8 +20,8 @@ export default async function HorariosPage(props: PageProps<"/admin/horarios">) 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900">Horarios de atención</h1>
-        <p className="text-zinc-600">
+        <h1 className="text-2xl font-semibold text-foreground">Horarios de atención</h1>
+        <p className="text-muted-foreground">
           Definí la plantilla semanal de atención. Podés agregar más de una franja por día (ej. mañana y tarde).
         </p>
       </div>
@@ -54,7 +54,7 @@ export default async function HorariosPage(props: PageProps<"/admin/horarios">) 
                 {ranges.map((range) => (
                   <div
                     key={range.id}
-                    className="flex items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm"
+                    className="flex items-center justify-between rounded-md border border-border bg-card px-3 py-2 text-sm"
                   >
                     <span>
                       {range.startTime} a {range.endTime} hs · turnos de {range.slotDurationMinutes} min

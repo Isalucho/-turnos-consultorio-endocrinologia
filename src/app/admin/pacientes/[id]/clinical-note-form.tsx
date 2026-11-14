@@ -127,7 +127,7 @@ export function ClinicalNoteForm({ patientId, note }: Props) {
       {note && <input type="hidden" name="noteId" value={note.id} />}
 
       {hasDraft && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
           <span>Hay un borrador sin guardar en este formulario (se conserva aunque cierres la página).</span>
           <button type="button" onClick={discardDraft} className="font-medium underline underline-offset-2">
             Descartar borrador
@@ -217,7 +217,7 @@ export function ClinicalNoteForm({ patientId, note }: Props) {
         />
       </div>
 
-      {state?.message && <p className="text-sm text-red-600">{state.message}</p>}
+      {state?.message && <p className="text-sm text-red-400">{state.message}</p>}
 
       <div className="flex items-center gap-3">
         <Button type="submit" disabled={pending}>
@@ -226,7 +226,7 @@ export function ClinicalNoteForm({ patientId, note }: Props) {
         {isEdit && (
           <Link
             href={`/admin/pacientes/${patientId}`}
-            className="text-sm text-zinc-500 underline underline-offset-2"
+            className="text-sm text-muted-foreground underline underline-offset-2"
           >
             Cancelar
           </Link>

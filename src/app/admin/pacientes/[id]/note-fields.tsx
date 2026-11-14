@@ -12,7 +12,7 @@ export function NoteFields({ data }: { data: NoteFieldsData }) {
   if (!weightKg && !bloodPressure && !diagnosis && !treatment && !labResults && !notes) return null;
 
   return (
-    <div className="flex flex-col gap-1 text-sm whitespace-pre-wrap text-zinc-700">
+    <div className="flex flex-col gap-1 text-sm whitespace-pre-wrap text-foreground/90">
       {(weightKg || bloodPressure) && (
         <p>
           {weightKg && <>Peso: {weightKg} kg</>}

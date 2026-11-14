@@ -58,7 +58,7 @@ export function AppointmentFiltersForm({ dateParam, statusParam, paymentParam }:
         Filtrar
       </Button>
       {dateParam && (
-        <Link href="/admin" className={buttonVariants({ variant: "ghost" })}>
+        <Link href="/admin/turnos" className={buttonVariants({ variant: "ghost" })}>
           Limpiar fecha
         </Link>
       )}

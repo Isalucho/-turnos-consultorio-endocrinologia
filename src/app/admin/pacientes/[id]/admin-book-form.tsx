@@ -21,7 +21,7 @@ export function AdminBookForm({ patientId, date, slots, hasEmail, suggestedType 
   const [state, formAction, pending] = useActionState(adminBookAppointmentAction, initialState);
 
   if (slots.length === 0) {
-    return <p className="text-sm text-zinc-500">No hay horarios libres ese día. Probá con otra fecha.</p>;
+    return <p className="text-sm text-muted-foreground">No hay horarios libres ese día. Probá con otra fecha.</p>;
   }
 
   return (
@@ -33,14 +33,14 @@ export function AdminBookForm({ patientId, date, slots, hasEmail, suggestedType 
         {slots.map((slot) => (
           <label key={slot.startTime} className="cursor-pointer">
             <input type="radio" name="startTime" value={slot.startTime} required className="peer sr-only" />
-            <span className="flex items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 peer-checked:border-emerald-600 peer-checked:bg-emerald-50 peer-checked:font-medium peer-checked:text-emerald-700 hover:border-zinc-300">
+            <span className="flex items-center justify-center rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground/90 peer-checked:border-primary peer-checked:bg-primary/15 peer-checked:font-medium peer-checked:text-primary hover:border-foreground/30">
               {slot.startTime}
             </span>
           </label>
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 text-sm text-zinc-700">
+      <div className="flex flex-wrap items-center gap-2 text-sm text-foreground/90">
         <label htmlFor="consultType">Tipo de consulta</label>
         <select
           id="consultType"
@@ -51,7 +51,7 @@ export function AdminBookForm({ patientId, date, slots, hasEmail, suggestedType 
           <option value="PRIMERA">Primera consulta</option>
           <option value="CONTROL">Control</option>
         </select>
-        <span className="text-xs text-zinc-500">
+        <span className="text-xs text-muted-foreground">
           {suggestedType === "PRIMERA"
             ? "Sugerido: es su primer turno en el sistema. Cambialo a Control si ya se atendía antes."
             : "Sugerido: ya tiene turnos cargados."}
@@ -61,13 +61,13 @@ export function AdminBookForm({ patientId, date, slots, hasEmail, suggestedType 
       <Textarea name="reason" placeholder="Motivo de la consulta (opcional)" maxLength={300} />
 
       {hasEmail && (
-        <label className="flex items-center gap-2 text-sm text-zinc-700">
+        <label className="flex items-center gap-2 text-sm text-foreground/90">
           <input type="checkbox" name="notify" defaultChecked className="size-4" />
           Enviar email de confirmación al paciente
         </label>
       )}
 
-      {state?.message && <p className="text-sm text-red-600">{state.message}</p>}
+      {state?.message && <p className="text-sm text-red-400">{state.message}</p>}
 
       <Button type="submit" disabled={pending} className="self-start">
         {pending ? "Guardando..." : "Dar turno"}

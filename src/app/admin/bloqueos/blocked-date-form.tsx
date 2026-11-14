@@ -20,7 +20,7 @@ export function BlockedDateForm() {
         <Input type="date" id="date" name="date" required />
       </div>
 
-      <label className="flex items-center gap-2 pb-2 text-sm text-zinc-700">
+      <label className="flex items-center gap-2 pb-2 text-sm text-foreground/90">
         <input
           type="checkbox"
           name="fullDay"
@@ -52,7 +52,7 @@ export function BlockedDateForm() {
         {pending ? "Agregando..." : "Bloquear"}
       </Button>
 
-      {state?.message && <p className="w-full text-sm text-red-600">{state.message}</p>}
+      {state?.message && <p className="w-full text-sm text-red-400">{state.message}</p>}
     </form>
   );
 }

@@ -148,7 +148,7 @@ export async function adminCancelAppointmentAction(formData: FormData) {
     data: { status: "CANCELLED" },
   });
   if (count === 0) {
-    revalidatePath("/admin");
+    revalidatePath("/admin", "layout");
     return;
   }
 
@@ -163,7 +163,7 @@ export async function adminCancelAppointmentAction(formData: FormData) {
     });
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   revalidatePath("/turnos/mis-turnos");
 }
 
@@ -171,7 +171,7 @@ export async function markAppointmentCompletedAction(formData: FormData) {
   await requireAdmin();
   const id = formData.get("id") as string;
   await prisma.appointment.updateMany({ where: { id, status: "CONFIRMED" }, data: { status: "COMPLETED" } });
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
 }
 
 export type PaymentState = { message?: string } | undefined;
@@ -186,7 +186,7 @@ export async function markAppointmentPaidAction(formData: FormData) {
   });
   if (!validated.success) {
     const message = validated.error.issues[0]?.message ?? "Datos de cobro inválidos.";
-    redirect(`/admin?pagoError=${encodeURIComponent(message)}`);
+    redirect(`/admin/turnos?pagoError=${encodeURIComponent(message)}`);
   }
 
   const { id, method, consultType } = validated.data;
@@ -197,7 +197,7 @@ export async function markAppointmentPaidAction(formData: FormData) {
     data: { paymentStatus: "PAID", paymentMethod: method, consultType, paidAt: new Date() },
   });
 
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
 }
 
 export async function undoPaymentAction(formData: FormData) {
@@ -209,5 +209,5 @@ export async function undoPaymentAction(formData: FormData) {
     data: { paymentStatus: "PENDING", paymentMethod: null, paidAt: null },
   });
 
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
 }

@@ -72,15 +72,15 @@ export default async function PatientDetailPage(props: PageProps<"/admin/pacient
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <Link href="/admin/pacientes" className="text-sm text-zinc-500 underline-offset-2 hover:underline">
+        <Link href="/admin/pacientes" className="text-sm text-muted-foreground underline-offset-2 hover:underline">
           ← Pacientes
         </Link>
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-900">{patient.name}</h1>
-        <p className="text-zinc-600">
+        <h1 className="mt-1 text-2xl font-semibold text-foreground">{patient.name}</h1>
+        <p className="text-muted-foreground">
           DNI {patient.dni} · {patient.phone}
           {patient.email && ` · ${patient.email}`}
         </p>
-        {patient.obraSocial && <p className="text-zinc-600">Obra social: {patient.obraSocial}</p>}
+        {patient.obraSocial && <p className="text-muted-foreground">Obra social: {patient.obraSocial}</p>}
       </div>
 
       {justCreated && (
@@ -111,7 +111,7 @@ export default async function PatientDetailPage(props: PageProps<"/admin/pacient
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <DateFilterForm selectedDateISO={selectedDateISO} todayISO={todayISO} />
-          <p className="text-sm font-medium text-zinc-900">{formatDateLong(selectedDate)}</p>
+          <p className="text-sm font-medium text-foreground">{formatDateLong(selectedDate)}</p>
           <AdminBookForm
             key={selectedDateISO}
             patientId={patient.id}
@@ -124,9 +124,9 @@ export default async function PatientDetailPage(props: PageProps<"/admin/pacient
       </Card>
 
       <div>
-        <h2 className="mb-3 text-lg font-medium text-zinc-900">Turnos</h2>
+        <h2 className="mb-3 text-lg font-medium text-foreground">Turnos</h2>
         {appointments.length === 0 ? (
-          <p className="text-sm text-zinc-500">Este paciente todavía no sacó turnos.</p>
+          <p className="text-sm text-muted-foreground">Este paciente todavía no sacó turnos.</p>
         ) : (
           <Card>
             <CardContent>
@@ -147,16 +147,16 @@ export default async function PatientDetailPage(props: PageProps<"/admin/pacient
                       <TableCell>
                         {appointment.startTime} - {appointment.endTime}
                       </TableCell>
-                      <TableCell className="max-w-40 truncate text-sm text-zinc-600">
+                      <TableCell className="max-w-40 truncate text-sm text-muted-foreground">
                         {appointment.reason ?? "-"}
                       </TableCell>
                       <TableCell>
                         <Badge variant={APPOINTMENT_STATUS_BADGE_VARIANT[appointment.status]}>
                           {APPOINTMENT_STATUS_LABEL[appointment.status]}
                         </Badge>
-                        <div className="mt-1 text-xs text-zinc-500">{CONSULT_TYPE_LABEL[appointment.consultType]}</div>
+                        <div className="mt-1 text-xs text-muted-foreground">{CONSULT_TYPE_LABEL[appointment.consultType]}</div>
                       </TableCell>
-                      <TableCell className="text-sm text-zinc-600">
+                      <TableCell className="text-sm text-muted-foreground">
                         {appointment.paymentStatus === "PAID"
                           ? `Pagado${appointment.paymentMethod ? ` · ${PAYMENT_METHOD_LABEL[appointment.paymentMethod]}` : ""}`
                           : appointment.status === "CANCELLED"
@@ -204,9 +204,9 @@ export default async function PatientDetailPage(props: PageProps<"/admin/pacient
       </Card>
 
       <div>
-        <h2 className="mb-3 text-lg font-medium text-zinc-900">Historia clínica</h2>
+        <h2 className="mb-3 text-lg font-medium text-foreground">Historia clínica</h2>
         {notes.length === 0 ? (
-          <p className="text-sm text-zinc-500">Todavía no hay registros para este paciente.</p>
+          <p className="text-sm text-muted-foreground">Todavía no hay registros para este paciente.</p>
         ) : (
           <div className="flex flex-col gap-3">
             {notes.map((note) => (
@@ -215,7 +215,7 @@ export default async function PatientDetailPage(props: PageProps<"/admin/pacient
                   <div>
                     <CardTitle className="text-base">{formatDateLong(note.date)}</CardTitle>
                     {note.revisions.length > 0 && (
-                      <p className="mt-1 text-xs text-zinc-500">Editado el {formatTimestamp(note.updatedAt)}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Editado el {formatTimestamp(note.updatedAt)}</p>
                     )}
                   </div>
                   <div className="flex items-center gap-1">
@@ -242,15 +242,15 @@ export default async function PatientDetailPage(props: PageProps<"/admin/pacient
                   <NoteFields data={note} />
                   {note.revisions.length > 0 && (
                     <details className="text-sm">
-                      <summary className="cursor-pointer text-zinc-500">
+                      <summary className="cursor-pointer text-muted-foreground">
                         Versiones anteriores ({note.revisions.length})
                       </summary>
-                      <div className="mt-2 flex flex-col gap-3 border-l-2 border-zinc-200 pl-3">
+                      <div className="mt-2 flex flex-col gap-3 border-l-2 border-border pl-3">
                         {note.revisions.map((revision) => {
                           const snapshot = revision.snapshot as NoteFieldsData;
                           return (
                             <div key={revision.id}>
-                              <p className="mb-1 text-xs text-zinc-500">
+                              <p className="mb-1 text-xs text-muted-foreground">
                                 Versión reemplazada el {formatTimestamp(revision.createdAt)}
                               </p>
                               <NoteFields data={snapshot} />
@@ -269,7 +269,7 @@ export default async function PatientDetailPage(props: PageProps<"/admin/pacient
 
       {deletedNotes.length > 0 && (
         <details>
-          <summary className="cursor-pointer text-sm text-zinc-500">
+          <summary className="cursor-pointer text-sm text-muted-foreground">
             Registros eliminados ({deletedNotes.length})
           </summary>
           <div className="mt-3 flex flex-col gap-3">
@@ -278,7 +278,7 @@ export default async function PatientDetailPage(props: PageProps<"/admin/pacient
                 <CardHeader className="flex flex-row items-center justify-between gap-2">
                   <div>
                     <CardTitle className="text-base">{formatDateLong(note.date)}</CardTitle>
-                    <p className="mt-1 text-xs text-zinc-500">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       Eliminado el {note.deletedAt ? formatTimestamp(note.deletedAt) : ""}
                     </p>
                   </div>
